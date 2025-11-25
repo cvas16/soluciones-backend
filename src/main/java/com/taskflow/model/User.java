@@ -3,7 +3,8 @@ package com.taskflow.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
+import java.util.Set;
+import java.util.HashSet;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -13,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -71,6 +73,11 @@ public class User implements UserDetails{
 	    @EqualsAndHashCode.Exclude
 	    private List<Task> assignedTasks = new ArrayList<>();
 	
+	@ManyToMany(mappedBy = "members") // "members" es el nombre del campo en Project
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Project> memberOfProjects = new HashSet<>();
 	
 	@Override
     public boolean isAccountNonExpired() {

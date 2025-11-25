@@ -43,7 +43,7 @@ public class Task {
     private Project project;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_user_id", nullable = true) 
+    @JoinColumn(name = "assig_user_id", nullable = true) 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User assignedUser;

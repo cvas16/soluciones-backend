@@ -67,4 +67,36 @@ public class ProjectService {
             .ownerUsername(project.getOwner().getUsername())
             .build();
     }
+    
+    @Transactional
+    public void addMember(Long projectId, String usernameToInvite, UserDetails currentUserDetails) {
+        User currentUser = getUserFromDetails(currentUserDetails);
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+        
+        if (!project.getOwner().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Solo el dueño puede invitar miembros");
+        }
+
+        User userToInvite = userRepository.findByUsername(usernameToInvite)
+            .orElseThrow(() -> new RuntimeException("Usuario a invitar no encontrado"));
+
+        project.getMembers().add(userToInvite);
+        
+        projectRepository.save(project);
+    }
+    
+    @Transactional
+    public void removeMember(Long projectId, Long userIdToRemove, UserDetails currentUserDetails) {
+        User currentUser = getUserFromDetails(currentUserDetails);
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+
+        if (!project.getOwner().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Solo el dueño puede eliminar miembros");
+        }
+
+        project.getMembers().removeIf(user -> user.getId().equals(userIdToRemove));
+        projectRepository.save(project);
+    }
 }

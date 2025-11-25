@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskflow.dto.ProjectCreateRequest;
@@ -56,5 +57,25 @@ public class ProjectController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); 
         }
+    }
+	
+	@PostMapping("/{id}/members")
+    public ResponseEntity<Void> inviteMember(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @AuthenticationPrincipal UserDetails userDetails) 
+    {
+        projectService.addMember(id, username, userDetails);
+        return ResponseEntity.ok().build();
+    }
+	
+	@DeleteMapping("/{id}/members/{userId}")
+    public ResponseEntity<Void> removeMember(
+            @PathVariable Long id,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails) 
+    {
+        projectService.removeMember(id, userId, userDetails);
+        return ResponseEntity.noContent().build();
     }
 }

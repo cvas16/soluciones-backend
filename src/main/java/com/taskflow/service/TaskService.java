@@ -1,0 +1,91 @@
+package com.taskflow.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.taskflow.dto.TaskCreateRequest;
+import com.taskflow.dto.TaskResponse;
+import com.taskflow.model.Project;
+import com.taskflow.model.Task;
+import com.taskflow.model.User;
+import com.taskflow.repository.ProjectRepository;
+import com.taskflow.repository.TaskRepository;
+import com.taskflow.repository.UserRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class TaskService {
+	@Autowired
+	private TaskRepository taskRepository;
+    @Autowired
+    private ProjectRepository projectRepository;
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Transactional	
+    public TaskResponse createTask(Long projectId, TaskCreateRequest request) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+
+        User assignedUser = null;
+        if (request.getAssignedUserId() != null) {
+            assignedUser = userRepository.findById(request.getAssignedUserId())
+                    .orElse(null); 
+        }
+
+        Task task = Task.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .status(request.getStatus() != null ? request.getStatus() : "Pendiente")
+                .project(project)
+                .assignedUser(assignedUser)
+                .build();
+
+        Task savedTask = taskRepository.save(task);
+        return mapToResponse(savedTask);
+    }
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getTasksByProjectId(Long projectId) {
+        return taskRepository.findAllByProjectId(projectId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+    @Transactional
+    public TaskResponse updateTask(Long taskId, TaskCreateRequest request) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
+
+        if (request.getTitle() != null) task.setTitle(request.getTitle());
+        if (request.getDescription() != null) task.setDescription(request.getDescription());
+        if (request.getStatus() != null) task.setStatus(request.getStatus());
+        
+        if (request.getAssignedUserId() != null) {
+            User user = userRepository.findById(request.getAssignedUserId()).orElse(null);
+            task.setAssignedUser(user);
+        }
+
+        Task updatedTask = taskRepository.save(task);
+        return mapToResponse(updatedTask);
+    }
+    @Transactional
+    public void deleteTask(Long taskId) {
+        if (!taskRepository.existsById(taskId)) {
+            throw new RuntimeException("Tarea no encontrada");
+        }
+        taskRepository.deleteById(taskId);
+    }
+    private TaskResponse mapToResponse(Task task) {
+        return TaskResponse.builder()
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .status(task.getStatus())
+                .projectId(task.getProject().getId())
+                .assignedUserId(task.getAssignedUser() != null ? task.getAssignedUser().getId() : null)
+                .assignedUsername(task.getAssignedUser() != null ? task.getAssignedUser().getUsername() : null)
+                .build();
+    }
+}

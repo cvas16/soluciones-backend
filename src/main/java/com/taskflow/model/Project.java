@@ -2,6 +2,8 @@ package com.taskflow.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -11,6 +13,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -31,9 +35,11 @@ public class Project {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+	
     @Column(nullable = false)
     private String name;
     private String description;
+    
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "owner_id", nullable = false) 
     @ToString.Exclude 
@@ -48,4 +54,16 @@ public class Project {
         @EqualsAndHashCode.Exclude
         @Builder.Default
         private List<Task> tasks = new ArrayList<>();
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "pro_members", 
+        joinColumns = @JoinColumn(name = "project_id"), 
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<User> members = new HashSet<>();
+    
 }

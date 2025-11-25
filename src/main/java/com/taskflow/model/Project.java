@@ -46,5 +46,6 @@ public class Project {
         )
         @ToString.Exclude
         @EqualsAndHashCode.Exclude
+        @Builder.Default
         private List<Task> tasks = new ArrayList<>();
 }

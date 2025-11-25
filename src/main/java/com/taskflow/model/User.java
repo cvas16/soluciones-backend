@@ -20,9 +20,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
+@Getter
+@Setter
 @Data 	
 @Builder
 @NoArgsConstructor
@@ -33,9 +37,6 @@ import lombok.ToString;
 	@UniqueConstraint(columnNames = "email")
 })
 public class User implements UserDetails{
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -58,6 +59,7 @@ public class User implements UserDetails{
 	    )
 	    @ToString.Exclude 
 	    @EqualsAndHashCode.Exclude 
+	    @Builder.Default
 	    private List<Project> projects = new ArrayList<>();
 	
 	@OneToMany(
@@ -69,17 +71,6 @@ public class User implements UserDetails{
 	    @EqualsAndHashCode.Exclude
 	    private List<Task> assignedTasks = new ArrayList<>();
 	
-	@Override
-	public String getPassword() {
-		// TODO Auto-generated method stub
-		return this.password;
-	}
-
-	@Override
-	public String getUsername() {
-		// TODO Auto-generated method stub
-		return this.username;
-	}
 	
 	@Override
     public boolean isAccountNonExpired() {

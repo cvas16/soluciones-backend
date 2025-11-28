@@ -40,6 +40,10 @@ public class Project {
     private String name;
     private String description;
     
+    @Column(nullable = false)
+    @Builder.Default
+    private String background = "linear-gradient(135deg, #0052cc 0%, #2684ff 100%)";
+    
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "owner_id", nullable = false) 
     @ToString.Exclude 

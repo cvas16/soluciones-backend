@@ -42,6 +42,7 @@ public class ProjectService {
         Project project = Project.builder()
             .name(request.getName())
             .description(request.getDescription())
+            .background(request.getBackground() != null ? request.getBackground() : "linear-gradient(135deg, #0052cc 0%, #2684ff 100%)")
             .owner(user)
             .build();
         Project savedProject = projectRepository.save(project);
@@ -75,6 +76,7 @@ public class ProjectService {
             .name(project.getName())
             .description(project.getDescription())
             .ownerUsername(project.getOwner().getUsername())
+            .background(project.getBackground())
             .build();
     }
     

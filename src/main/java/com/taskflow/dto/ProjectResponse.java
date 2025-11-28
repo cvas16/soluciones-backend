@@ -14,4 +14,5 @@ public class ProjectResponse {
     private String name;
     private String description;
     private String ownerUsername;
+    private String background;
 }

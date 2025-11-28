@@ -1,6 +1,7 @@
 package com.taskflow.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,9 +27,12 @@ public class TaskService {
     private UserRepository userRepository;
     
     @Transactional	
-    public TaskResponse createTask(Long projectId, TaskCreateRequest request) {
+    public TaskResponse createTask(Long projectId, TaskCreateRequest request, UserDetails userDetails) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+        
+        User creator = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         User assignedUser = null;
         if (request.getAssignedUserId() != null) {
@@ -40,8 +44,10 @@ public class TaskService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .status(request.getStatus() != null ? request.getStatus() : "Pendiente")
+                .priority(request.getPriority()!= null ? request.getPriority() : "Media")
                 .project(project)
                 .assignedUser(assignedUser)
+                .createdBy(creator)
                 .build();
 
         Task savedTask = taskRepository.save(task);
@@ -61,7 +67,8 @@ public class TaskService {
         if (request.getTitle() != null) task.setTitle(request.getTitle());
         if (request.getDescription() != null) task.setDescription(request.getDescription());
         if (request.getStatus() != null) task.setStatus(request.getStatus());
-        
+        if (request.getPriority() != null) task.setPriority(request.getPriority());
+        if (request.getAttachments() != null) task.setAttachments(request.getAttachments());
         if (request.getAssignedUserId() != null) {
             User user = userRepository.findById(request.getAssignedUserId()).orElse(null);
             task.setAssignedUser(user);
@@ -83,6 +90,10 @@ public class TaskService {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus())
+                .priority(task.getPriority())
+                .createdAt(task.getCreatedAt())
+                .createdByUsername(task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Desconocido") 
+                .attachments(task.getAttachments())
                 .projectId(task.getProject().getId())
                 .assignedUserId(task.getAssignedUser() != null ? task.getAssignedUser().getId() : null)
                 .assignedUsername(task.getAssignedUser() != null ? task.getAssignedUser().getUsername() : null)

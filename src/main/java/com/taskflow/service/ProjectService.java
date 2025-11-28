@@ -59,6 +59,16 @@ public class ProjectService {
         projectRepository.delete(project);
     }
     
+    public ProjectResponse getProjectById(Long projectId, UserDetails userDetails) {
+    	User user = getUserFromDetails(userDetails);
+    	Project project = projectRepository.findById(projectId)
+    			.orElseThrow(()-> new RuntimeException("Proyecto no encontrado"));
+    	if(!project.getOwner().getId().equals(user.getId())) {
+    		throw new RuntimeException("No tienes permiso para ver este proyecto");
+    	}
+    	return mapProjectToResponse(project);
+    }
+    
     private ProjectResponse mapProjectToResponse(Project project) {
         return ProjectResponse.builder()
             .id(project.getId())

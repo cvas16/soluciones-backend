@@ -1,5 +1,7 @@
 package com.taskflow.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,4 +16,6 @@ public class TaskCreateRequest {
     private String description;
     private String status; 
     private Long assignedUserId;
+    private String priority; 
+    private List<String> attachments;
 }

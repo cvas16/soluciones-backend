@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.taskflow.dto.TaskCreateRequest;
@@ -21,8 +23,10 @@ public class TaskController {
 	@PostMapping("/projects/{projectId}/tasks")
     public ResponseEntity<TaskResponse> createTask(
             @PathVariable Long projectId,
-            @RequestBody TaskCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(projectId, request));
+            @RequestBody TaskCreateRequest request,
+    		@AuthenticationPrincipal UserDetails userDetails)
+	{
+        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(projectId, request, userDetails));
     }
 	
 	@GetMapping("/projects/{projectId}/tasks")

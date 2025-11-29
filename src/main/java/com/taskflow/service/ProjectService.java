@@ -14,7 +14,7 @@ import com.taskflow.model.Project;
 import com.taskflow.model.User;
 import com.taskflow.repository.ProjectRepository;
 import com.taskflow.repository.UserRepository;
-
+import com.taskflow.dto.UserSummaryResponse;
 @Service
 public class ProjectService {
 	@Autowired
@@ -77,6 +77,11 @@ public class ProjectService {
             .description(project.getDescription())
             .ownerUsername(project.getOwner().getUsername())
             .background(project.getBackground())
+            .members(project.getMembers().stream()
+                    .map(user -> user.getUsername())
+                    .toList())
+            .taskCount(project.getTasks().size())
+            .membersCount(project.getMembers().size() + 1)
             .build();
     }
     
@@ -110,5 +115,15 @@ public class ProjectService {
 
         project.getMembers().removeIf(user -> user.getId().equals(userIdToRemove));
         projectRepository.save(project);
+    }
+    
+    public List<UserSummaryResponse> searchUsers(String query) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query);
+        return users.stream()
+            .map(user -> UserSummaryResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .build())
+            .collect(Collectors.toList());
     }
 }

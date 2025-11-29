@@ -1,5 +1,7 @@
 package com.taskflow.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +17,7 @@ public class ProjectResponse {
     private String description;
     private String ownerUsername;
     private String background;
+    private List<String> members;
+    private int taskCount;
+    private int membersCount;
 }

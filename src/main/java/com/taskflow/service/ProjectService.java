@@ -1,6 +1,8 @@
 package com.taskflow.service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +27,20 @@ public class ProjectService {
     private User getUserFromDetails(UserDetails userDetails) {
         return userRepository.findByUsername(userDetails.getUsername())
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
     }
     
     @Transactional(readOnly = true) 
     public List<ProjectResponse> getProjectsForUser(UserDetails userDetails) {
         User user = getUserFromDetails(userDetails);
-        List<Project> projects = projectRepository.findAllByOwnerId(user.getId());
-        return projects.stream()
-            .map(this::mapProjectToResponse)
-            .collect(Collectors.toList());
+        List<Project> ownedProjects = projectRepository.findAllByOwnerId(user.getId());
+        List<Project> memberProjects = projectRepository.findByMembers_Id(user.getId());
+        Set<Project> allProjects = new HashSet<>();
+        allProjects.addAll(ownedProjects);
+        allProjects.addAll(memberProjects);
+        return allProjects.stream()
+                .map(this::mapProjectToResponse)
+                .collect(Collectors.toList());
     }
     
     @Transactional 
@@ -64,8 +71,11 @@ public class ProjectService {
     	User user = getUserFromDetails(userDetails);
     	Project project = projectRepository.findById(projectId)
     			.orElseThrow(()-> new RuntimeException("Proyecto no encontrado"));
-    	if(!project.getOwner().getId().equals(user.getId())) {
-    		throw new RuntimeException("No tienes permiso para ver este proyecto");
+    	boolean isOwner = project.getOwner().getId().equals(user.getId());
+    	boolean isMember = project.getMembers().stream()
+                .anyMatch(member -> member.getId().equals(user.getId()));
+    	if(!isOwner && !isMember){
+    		throw new RuntimeException("Acceso denegado: No eres miembro de este proyecto");
     	}
     	return mapProjectToResponse(project);
     }
@@ -78,7 +88,10 @@ public class ProjectService {
             .ownerUsername(project.getOwner().getUsername())
             .background(project.getBackground())
             .members(project.getMembers().stream()
-                    .map(user -> user.getUsername())
+                    .map(user -> UserSummaryResponse.builder()
+                            .id(user.getId())
+                            .username(user.getUsername())
+                            .build())
                     .toList())
             .taskCount(project.getTasks().size())
             .membersCount(project.getMembers().size() + 1)

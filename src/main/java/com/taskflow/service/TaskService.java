@@ -31,9 +31,16 @@ public class TaskService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
         
-        User creator = userRepository.findByUsername(userDetails.getUsername())
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
+        
+        boolean isOwner = project.getOwner().getId().equals(currentUser.getId());
+        boolean isMember = project.getMembers().stream()
+                .anyMatch(m -> m.getId().equals(currentUser.getId()));
+        if (!isOwner && !isMember) {
+            throw new RuntimeException("No tienes permiso para crear tareas en este proyecto");
+        }
+        
         User assignedUser = null;
         if (request.getAssignedUserId() != null) {
             assignedUser = userRepository.findById(request.getAssignedUserId())
@@ -45,9 +52,10 @@ public class TaskService {
                 .description(request.getDescription())
                 .status(request.getStatus() != null ? request.getStatus() : "Pendiente")
                 .priority(request.getPriority()!= null ? request.getPriority() : "Media")
+                .attachments(request.getAttachments())
                 .project(project)
                 .assignedUser(assignedUser)
-                .createdBy(creator)
+                .createdBy(currentUser)
                 .build();
 
         Task savedTask = taskRepository.save(task);

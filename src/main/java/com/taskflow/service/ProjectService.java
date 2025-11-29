@@ -110,7 +110,10 @@ public class ProjectService {
 
         User userToInvite = userRepository.findByUsername(usernameToInvite)
             .orElseThrow(() -> new RuntimeException("Usuario a invitar no encontrado"));
-
+        
+        if (project.getMembers().contains(userToInvite) || project.getOwner().equals(userToInvite)) {
+            throw new RuntimeException("El usuario ya pertenece al proyecto");
+        }
         project.getMembers().add(userToInvite);
         
         projectRepository.save(project);
@@ -130,8 +133,14 @@ public class ProjectService {
         projectRepository.save(project);
     }
     
-    public List<UserSummaryResponse> searchUsers(String query) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query);
+    public List<UserSummaryResponse> searchUsers(String query,Long projectId) {
+    	List<User> users;
+        if (projectId != null) {
+            users = userRepository.findUsersToInvite(query, projectId);
+        } else {
+            users = userRepository.findByUsernameContainingIgnoreCase(query);
+        }
+
         return users.stream()
             .map(user -> UserSummaryResponse.builder()
                 .id(user.getId())

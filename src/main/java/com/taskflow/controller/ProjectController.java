@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskflow.dto.ProjectCreateRequest;
 import com.taskflow.dto.ProjectResponse;
 import com.taskflow.service.ProjectService;
-
+import com.taskflow.dto.UserSummaryResponse;
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectController {
@@ -40,6 +40,14 @@ public class ProjectController {
 			@AuthenticationPrincipal UserDetails userDetails){
 		return ResponseEntity.ok(projectService.getProjectById(id, userDetails));
 	}
+	
+	@GetMapping("/search-users")
+    public ResponseEntity<List<UserSummaryResponse>> searchUsers(
+            @RequestParam String query,
+            @RequestParam(required = false) Long projectId) 
+    {
+        return ResponseEntity.ok(projectService.searchUsers(query, projectId));
+    }
 	
 	@PostMapping
     public ResponseEntity<ProjectResponse> createProject(

@@ -16,6 +16,7 @@ public class ProjectResponse {
     private String name;
     private String description;
     private String ownerUsername;
+    private Long ownerId;
     private String background;
     private List<UserSummaryResponse> members;
     private int taskCount;

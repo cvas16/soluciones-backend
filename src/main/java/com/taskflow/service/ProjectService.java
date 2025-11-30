@@ -1,5 +1,6 @@
 package com.taskflow.service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -81,20 +82,24 @@ public class ProjectService {
     }
     
     private ProjectResponse mapProjectToResponse(Project project) {
+    	List<User> projectTeam = new ArrayList<>();
+        projectTeam.add(project.getOwner()); 
+        projectTeam.addAll(project.getMembers());
         return ProjectResponse.builder()
             .id(project.getId())
             .name(project.getName())
             .description(project.getDescription())
             .ownerUsername(project.getOwner().getUsername())
+            .ownerId(project.getOwner().getId())
             .background(project.getBackground())
-            .members(project.getMembers().stream()
+            .members(projectTeam.stream()
                     .map(user -> UserSummaryResponse.builder()
                             .id(user.getId())
                             .username(user.getUsername())
                             .build())
                     .toList())
             .taskCount(project.getTasks().size())
-            .membersCount(project.getMembers().size() + 1)
+            .membersCount(projectTeam.size())
             .build();
     }
     

@@ -68,18 +68,25 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
     @Transactional
-    public TaskResponse updateTask(Long taskId, TaskCreateRequest request) {
+    public TaskResponse updateTask(Long taskId, TaskCreateRequest request,UserDetails userDetails) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
-
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario actual no encontrado"));
         if (request.getTitle() != null) task.setTitle(request.getTitle());
         if (request.getDescription() != null) task.setDescription(request.getDescription());
         if (request.getStatus() != null) task.setStatus(request.getStatus());
         if (request.getPriority() != null) task.setPriority(request.getPriority());
         if (request.getAttachments() != null) task.setAttachments(request.getAttachments());
         if (request.getAssignedUserId() != null) {
-            User user = userRepository.findById(request.getAssignedUserId()).orElse(null);
-            task.setAssignedUser(user);
+            Long currentAssignedId = task.getAssignedUser() != null ? task.getAssignedUser().getId() : null;       
+            if (!request.getAssignedUserId().equals(currentAssignedId)) {
+                 if (!task.getProject().getOwner().getId().equals(currentUser.getId())) {
+                    throw new RuntimeException("Solo el dueño del proyecto puede asignar tareas.");
+                }
+                User userToAssign = userRepository.findById(request.getAssignedUserId()).orElse(null);
+                task.setAssignedUser(userToAssign);
+            }
         }
 
         Task updatedTask = taskRepository.save(task);

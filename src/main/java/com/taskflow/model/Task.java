@@ -83,4 +83,10 @@ public class Task {
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<SubTask> subTasks = new ArrayList<>();
 }

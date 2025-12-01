@@ -75,4 +75,17 @@ public class Project {
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<Milestone> milestones = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<Tag> tags = new ArrayList<>();
+
+    
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<ActivityLog> activityLogs = new ArrayList<>();
 }

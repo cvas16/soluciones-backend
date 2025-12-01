@@ -30,7 +30,9 @@ public class TaskService {
 	private UserRepository userRepository;
 	@Autowired
 	private DependencyRepository dependencyRepository;
-
+	@Autowired
+    private ActivityLogService activityLogService;
+	
 	@Transactional
 	public TaskResponse createTask(Long projectId, TaskCreateRequest request, UserDetails userDetails) {
 		Project project = projectRepository.findById(projectId)
@@ -38,13 +40,13 @@ public class TaskService {
 
 		User currentUser = userRepository.findByUsername(userDetails.getUsername())
 				.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
+		
 		boolean isOwner = project.getOwner().getId().equals(currentUser.getId());
 		boolean isMember = project.getMembers().stream().anyMatch(m -> m.getId().equals(currentUser.getId()));
 		if (!isOwner && !isMember) {
 			throw new RuntimeException("No tienes permiso para crear tareas en este proyecto");
 		}
-
+		
 		User assignedUser = null;
 		if (request.getAssignedUserId() != null) {
 			assignedUser = userRepository.findById(request.getAssignedUserId()).orElse(null);
@@ -55,8 +57,15 @@ public class TaskService {
 				.priority(request.getPriority() != null ? request.getPriority() : "Media")
 				.attachments(request.getAttachments()).project(project).assignedUser(assignedUser)
 				.createdBy(currentUser).build();
-
+		
 		Task savedTask = taskRepository.save(task);
+		activityLogService.logActivity(
+	            savedTask.getProject(), 
+	            currentUser,
+	            savedTask, 
+	            "TASK_CREATED", 
+	            "Creó la tarea: " + savedTask.getTitle()
+	        );
 		return mapToResponse(savedTask);
 	}
 
@@ -71,15 +80,22 @@ public class TaskService {
 		Task task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
 		User currentUser = userRepository.findByUsername(userDetails.getUsername())
 				.orElseThrow(() -> new RuntimeException("Usuario actual no encontrado"));
-
-		if (request.getTitle() != null)
+		//titulo
+		if (request.getTitle() != null && !request.getTitle().equals(task.getTitle())) {
+			activityLogService.logActivity(task.getProject(), currentUser, task, "TASK_UPDATED",
+					"Cambió el título a: '" + request.getTitle() + "'");
 			task.setTitle(request.getTitle());
-		if (request.getDescription() != null)
+		}
+
+		// Descripción 
+		if (request.getDescription() != null) {
 			task.setDescription(request.getDescription());
-		if (request.getStatus() != null) {
+		}
+
+		//  Estado 
+		if (request.getStatus() != null && !request.getStatus().equals(task.getStatus())) {
 			if (request.getStatus().equals("Finalizado") || request.getStatus().equals("Hecho")) {
 				List<Dependency> dependencies = dependencyRepository.findByBlockedTaskId(taskId);
-
 				for (Dependency dep : dependencies) {
 					Task blocker = dep.getBlockerTask();
 					if (!blocker.getStatus().equals("Finalizado") && !blocker.getStatus().equals("Hecho")) {
@@ -88,22 +104,40 @@ public class TaskService {
 					}
 				}
 			}
+			
+			activityLogService.logActivity(task.getProject(), currentUser, task, "STATUS_CHANGED",
+					"Movió la tarea de '" + task.getStatus() + "' a '" + request.getStatus() + "'");
+			
 			task.setStatus(request.getStatus());
 		}
-		if (request.getPriority() != null)
-			task.setPriority(request.getPriority());
-		if (request.getAttachments() != null)
-			task.setAttachments(request.getAttachments());
 
+		// Prioridad
+		if (request.getPriority() != null && !request.getPriority().equals(task.getPriority())) {
+			activityLogService.logActivity(task.getProject(), currentUser, task, "PRIORITY_CHANGED",
+					"Cambió la prioridad a: " + request.getPriority());
+			task.setPriority(request.getPriority());
+		}
+
+		// Adjuntos
+		if (request.getAttachments() != null) {
+			task.setAttachments(request.getAttachments());
+		}
+
+		//  Responsable
 		if (request.getAssignedUserId() != null) {
-            Long currentAssignedId = task.getAssignedUser() != null ? task.getAssignedUser().getId() : null;
-            if (!request.getAssignedUserId().equals(currentAssignedId)) {
-                 if (!task.getProject().getOwner().getId().equals(currentUser.getId())) {
-                    throw new RuntimeException("Solo el dueño del proyecto puede asignar o reasignar tareas.");
-                }
-                User userToAssign = userRepository.findById(request.getAssignedUserId()).orElse(null);
-                task.setAssignedUser(userToAssign);
-            }
+			Long currentAssignedId = task.getAssignedUser() != null ? task.getAssignedUser().getId() : null;
+			if (!request.getAssignedUserId().equals(currentAssignedId)) {
+				if (!task.getProject().getOwner().getId().equals(currentUser.getId())) {
+					throw new RuntimeException("Solo el dueño del proyecto puede asignar o reasignar tareas.");
+				}
+				User userToAssign = userRepository.findById(request.getAssignedUserId()).orElse(null);
+				
+				String newAssigneeName = userToAssign != null ? userToAssign.getUsername() : "Sin asignar";
+				activityLogService.logActivity(task.getProject(), currentUser, task, "ASSIGNED_USER",
+						"Asignó la tarea a: " + newAssigneeName);
+				
+				task.setAssignedUser(userToAssign);
+			}
 		}
 
 		Task updatedTask = taskRepository.save(task);
@@ -111,12 +145,21 @@ public class TaskService {
 	}
 
 	@Transactional
-	public void deleteTask(Long taskId) {
-		if (!taskRepository.existsById(taskId)) {
-			throw new RuntimeException("Tarea no encontrada");
-		}
-		taskRepository.deleteById(taskId);
-	}
+    public void deleteTask(Long taskId, UserDetails userDetails) { 
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
+        
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        boolean isProjectOwner = task.getProject().getOwner().getId().equals(currentUser.getId());
+        boolean isTaskCreator = task.getCreatedBy().getId().equals(currentUser.getId());
+
+        if (!isProjectOwner && !isTaskCreator) {
+            throw new RuntimeException("No tienes permiso para eliminar esta tarea.");
+        }
+        taskRepository.deleteById(taskId);
+    }
 
 	private TaskResponse mapToResponse(Task task) {
 		return TaskResponse.builder()

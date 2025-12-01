@@ -28,6 +28,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import com.taskflow.model.ActivityLog;
 
 @Data
 @Builder
@@ -109,4 +110,10 @@ public class Task {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Milestone milestone;
+    
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<ActivityLog> activityLogs = new ArrayList<>();
 }

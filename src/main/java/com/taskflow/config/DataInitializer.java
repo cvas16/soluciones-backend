@@ -3,8 +3,9 @@ package com.taskflow.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.taskflow.model.Role;
-import com.taskflow.repository.RoleRepository;
+
+import com.taskflow.features.users.model.Role;
+import com.taskflow.features.users.repository.RoleRepository;
 
 @Configuration
 public class DataInitializer {

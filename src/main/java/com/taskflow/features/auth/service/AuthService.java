@@ -5,6 +5,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,12 +54,22 @@ public class AuthService {
 	}
 	
 	public LoginResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                request.getUsername(),
-                request.getPassword()
-            )
-        );
+		try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+           
+        } catch (LockedException e) {
+            // CASO: USUARIO BANEADO
+            throw new RuntimeException("TU CUENTA ESTÁ BLOQUEADA. Contacta al administrador.");
+        } catch (DisabledException e) {
+            // CASO: USUARIO DESHABILITADO
+            throw new RuntimeException("Tu cuenta aún no está activa.");
+        } catch (BadCredentialsException e) {
+            // CASO: CONTRASEÑA MAL
+            throw new RuntimeException("Usuario o contraseña incorrectos.");
+        }
+		
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado después de la autenticación"));
             String token = jwtService.generateToken(user);

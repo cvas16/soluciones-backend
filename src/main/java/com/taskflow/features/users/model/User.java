@@ -48,47 +48,28 @@ import lombok.ToString;
 	@UniqueConstraint(columnNames = "email")
 })
 public class User implements UserDetails{
-	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-	
-	@Column(nullable = false)
-	private String username;
-	
-	@Column(nullable = false)
-	private String email;
-	
-	@Column(nullable = false)
-	private String password;
-	
-	@OneToMany(
-	        mappedBy = "owner", 
-	        cascade = CascadeType.ALL, 
-	        orphanRemoval = true 
-	    )
-	    @ToString.Exclude 
-	    @EqualsAndHashCode.Exclude 
-	    @Builder.Default
-	    private List<Project> projects = new ArrayList<>();
-	
-	@OneToMany(
-	        mappedBy = "assignedUser",
-	        cascade = CascadeType.ALL, 
-	        orphanRemoval = true
-	    )
-	    @ToString.Exclude
-	    @EqualsAndHashCode.Exclude
-	    private List<Task> assignedTasks = new ArrayList<>();
-	
-	@ManyToMany(mappedBy = "members") 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
+    
+    @Column(nullable = false)
+    private String username;
+    
+    @Column(nullable = false)
+    private String email;
+    
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
     @Builder.Default
-    private Set<Project> memberOfProjects = new HashSet<>();
-	
-	@ManyToMany(fetch = FetchType.EAGER) 
+    private boolean enabled = true; 
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean accountNonLocked = true;
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -96,14 +77,40 @@ public class User implements UserDetails{
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
-	@Override
+    
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude 
+    @EqualsAndHashCode.Exclude 
+    @Builder.Default
+    private List<Project> projects = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<Task> assignedTasks = new ArrayList<>();
+    
+    @ManyToMany(mappedBy = "members")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Project> memberOfProjects = new HashSet<>();
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked; 
     }
 
     @Override
@@ -113,14 +120,6 @@ public class User implements UserDetails{
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled; 
     }
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
-    }
-
-
 }

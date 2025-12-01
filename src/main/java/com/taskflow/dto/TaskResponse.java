@@ -24,4 +24,5 @@ public class TaskResponse {
     private LocalDateTime createdAt;
     private String createdByUsername; 
     private List<String> attachments;
+    private List<TagResponse> tags;
 }

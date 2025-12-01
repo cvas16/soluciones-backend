@@ -1,5 +1,6 @@
 package com.taskflow.model;
-
+import java.util.HashSet;
+import java.util.Set;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -89,4 +92,15 @@ public class Task {
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<SubTask> subTasks = new ArrayList<>();
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "task_tags",
+        joinColumns = @JoinColumn(name = "task_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private Set<Tag> tags = new HashSet<>();
 }

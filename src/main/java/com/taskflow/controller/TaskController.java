@@ -16,36 +16,34 @@ import com.taskflow.service.TaskService;
 @RestController
 @RequestMapping("/api")
 public class TaskController {
-	
+
 	@Autowired
-    private TaskService taskService;
-	
+	private TaskService taskService;
+
 	@PostMapping("/projects/{projectId}/tasks")
-    public ResponseEntity<TaskResponse> createTask(
-            @PathVariable Long projectId,
-            @RequestBody TaskCreateRequest request,
-    		@AuthenticationPrincipal UserDetails userDetails)
-	{
-        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(projectId, request, userDetails));
-    }
-	
+	public ResponseEntity<TaskResponse> createTask(@PathVariable Long projectId, @RequestBody TaskCreateRequest request,
+			@AuthenticationPrincipal UserDetails userDetails) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(projectId, request, userDetails));
+	}
+
 	@GetMapping("/projects/{projectId}/tasks")
-    public ResponseEntity<List<TaskResponse>> getTasksByProject(@PathVariable Long projectId) {
-        return ResponseEntity.ok(taskService.getTasksByProjectId(projectId));
-    }
-	
+	public ResponseEntity<List<TaskResponse>> getTasksByProject(@PathVariable Long projectId) {
+		return ResponseEntity.ok(taskService.getTasksByProjectId(projectId));
+	}
+
 	@PutMapping("/tasks/{taskId}")
-    public ResponseEntity<TaskResponse> updateTask(
-    		@PathVariable Long taskId,
-            @RequestBody TaskCreateRequest request,
-            @AuthenticationPrincipal UserDetails userDetails)
-    {
-        return ResponseEntity.ok(taskService.updateTask(taskId, request, userDetails));
-    }
-	
+	public ResponseEntity<?> updateTask(@PathVariable Long taskId, @RequestBody TaskCreateRequest request,
+			@AuthenticationPrincipal UserDetails userDetails) {
+		try {
+			return ResponseEntity.ok(taskService.updateTask(taskId, request, userDetails));
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+		}
+	}
+
 	@DeleteMapping("/tasks/{taskId}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long taskId) {
-        taskService.deleteTask(taskId);
-        return ResponseEntity.noContent().build();
-    }
+	public ResponseEntity<Void> deleteTask(@PathVariable Long taskId) {
+		taskService.deleteTask(taskId);
+		return ResponseEntity.noContent().build();
+	}
 }

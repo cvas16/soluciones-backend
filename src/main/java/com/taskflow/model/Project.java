@@ -70,4 +70,9 @@ public class Project {
     @Builder.Default
     private Set<User> members = new HashSet<>();
     
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<Milestone> milestones = new ArrayList<>();
 }

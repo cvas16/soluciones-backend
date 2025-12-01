@@ -103,4 +103,10 @@ public class Task {
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private Set<Tag> tags = new HashSet<>();
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "milestone_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Milestone milestone;
 }

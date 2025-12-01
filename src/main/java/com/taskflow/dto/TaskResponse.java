@@ -25,4 +25,6 @@ public class TaskResponse {
     private String createdByUsername; 
     private List<String> attachments;
     private List<TagResponse> tags;
+    private Long milestoneId;
+    private String milestoneName;
 }

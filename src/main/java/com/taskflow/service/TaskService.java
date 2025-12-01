@@ -131,6 +131,8 @@ public class TaskService {
 				.projectId(task.getProject().getId())
 				.assignedUserId(task.getAssignedUser() != null ? task.getAssignedUser().getId() : null)
 				.assignedUsername(task.getAssignedUser() != null ? task.getAssignedUser().getUsername() : null)
+				.milestoneId(task.getMilestone() != null ? task.getMilestone().getId() : null)
+				.milestoneName(task.getMilestone() != null ? task.getMilestone().getName() : null)
 				.tags(task.getTags().stream()
 			        .map(tag -> TagResponse.builder()
 			            .id(tag.getId())

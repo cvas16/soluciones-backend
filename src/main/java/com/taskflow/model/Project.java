@@ -1,9 +1,9 @@
 package com.taskflow.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -32,12 +32,14 @@ import lombok.ToString;
 @Entity
 @Table(name = "projects")
 public class Project {
-	@Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-	
+    
     @Column(nullable = false)
     private String name;
+    
     private String description;
     
     @Column(nullable = false)
@@ -49,40 +51,37 @@ public class Project {
     @ToString.Exclude 
     @EqualsAndHashCode.Exclude 
     private User owner;
-    @OneToMany(
-            mappedBy = "project", 
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-        )
-        @ToString.Exclude
-        @EqualsAndHashCode.Exclude
-        @Builder.Default
-        private List<Task> tasks = new ArrayList<>();
-    
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<Task> tasks = new ArrayList<>();
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "pro_members", 
-        joinColumns = @JoinColumn(name = "project_id"), 
+        joinColumns = @JoinColumn(name = "project_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private Set<User> members = new HashSet<>();
-    
+    //HITOS
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<Milestone> milestones = new ArrayList<>();
-    
+
+    //ETIQUETAS
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<Tag> tags = new ArrayList<>();
 
-    
+    // HISTORIAL
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

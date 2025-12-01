@@ -116,4 +116,10 @@ public class Task {
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<ActivityLog> activityLogs = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private List<TimeEntry> timeEntries = new ArrayList<>();
 }

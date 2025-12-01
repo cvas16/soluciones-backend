@@ -11,9 +11,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -26,6 +29,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import java.util.stream.Collectors; 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Getter
 @Setter
@@ -73,12 +78,20 @@ public class User implements UserDetails{
 	    @EqualsAndHashCode.Exclude
 	    private List<Task> assignedTasks = new ArrayList<>();
 	
-	@ManyToMany(mappedBy = "members") // "members" es el nombre del campo en Project
+	@ManyToMany(mappedBy = "members") 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private Set<Project> memberOfProjects = new HashSet<>();
 	
+	@ManyToMany(fetch = FetchType.EAGER) 
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();
 	@Override
     public boolean isAccountNonExpired() {
         return true;
@@ -99,10 +112,11 @@ public class User implements UserDetails{
         return true;
     }
     @Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// TODO Auto-generated method stub
-		return List.of();
-	}
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+    }
 
 
 }

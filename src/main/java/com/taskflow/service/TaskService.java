@@ -32,6 +32,8 @@ public class TaskService {
 	private DependencyRepository dependencyRepository;
 	@Autowired
     private ActivityLogService activityLogService;
+	@Autowired
+    private NotificationService notificationService;
 	
 	@Transactional
 	public TaskResponse createTask(Long projectId, TaskCreateRequest request, UserDetails userDetails) {
@@ -137,6 +139,15 @@ public class TaskService {
 						"Asignó la tarea a: " + newAssigneeName);
 				
 				task.setAssignedUser(userToAssign);
+				if (userToAssign != null && !userToAssign.getId().equals(currentUser.getId())) {
+	                // Solo notificar si asigno a OTRA persona (no a mí mismo)
+	                notificationService.createNotification(
+	                    userToAssign, // Destinatario
+	                    "Te han asignado la tarea: " + task.getTitle(), // Mensaje
+	                    "ASSIGNMENT", // Tipo
+	                    task.getId() // ID para ir a la tarea
+	                );
+	            }
 			}
 		}
 

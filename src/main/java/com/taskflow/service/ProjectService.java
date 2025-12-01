@@ -24,6 +24,8 @@ public class ProjectService {
     private ProjectRepository projectRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private NotificationService notificationService;
     
     private User getUserFromDetails(UserDetails userDetails) {
         return userRepository.findByUsername(userDetails.getUsername())
@@ -120,8 +122,13 @@ public class ProjectService {
             throw new RuntimeException("El usuario ya pertenece al proyecto");
         }
         project.getMembers().add(userToInvite);
-        
         projectRepository.save(project);
+        notificationService.createNotification(
+                userToInvite, 
+                "Te han invitado al proyecto: " + project.getName(), 
+                "INVITE", 
+                project.getId() 
+            );
     }
     
     @Transactional

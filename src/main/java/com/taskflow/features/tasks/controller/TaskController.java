@@ -37,7 +37,7 @@ public class TaskController {
 	public ResponseEntity<List<TaskResponse>> getTasksByProject(@PathVariable Long projectId) {
 		return ResponseEntity.ok(taskService.getTasksByProjectId(projectId));
 	}
-
+	
 	@PutMapping("/tasks/{taskId}")
 	public ResponseEntity<?> updateTask(@PathVariable Long taskId, @RequestBody TaskCreateRequest request,
 			@AuthenticationPrincipal UserDetails userDetails) {
@@ -49,8 +49,12 @@ public class TaskController {
 	}
 
 	@DeleteMapping("/tasks/{taskId}")
-	public ResponseEntity<Void> deleteTask(@PathVariable Long taskId, @AuthenticationPrincipal UserDetails userDetails) {
-		taskService.deleteTask(taskId, userDetails); 
+    public ResponseEntity<Void> deleteTask(
+            @PathVariable Long taskId, 
+            @AuthenticationPrincipal UserDetails userDetails) 
+    {
+        taskService.deleteTask(taskId, userDetails);
         return ResponseEntity.noContent().build();
+    
 	}
 }

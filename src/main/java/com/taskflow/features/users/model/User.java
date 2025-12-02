@@ -69,6 +69,7 @@ public class User implements UserDetails{
     @Column(nullable = false)
     @Builder.Default
     private boolean accountNonLocked = true;
+    
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
@@ -95,7 +96,7 @@ public class User implements UserDetails{
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private Set<Project> memberOfProjects = new HashSet<>();
-
+    
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

@@ -146,7 +146,7 @@ public class TaskService {
 	                    userToAssign, // Destinatario
 	                    "Te han asignado la tarea: " + task.getTitle(), // Mensaje
 	                    "ASSIGNMENT", // Tipo
-	                    task.getId() // ID para ir a la tarea
+	                    task.getId() 
 	                );
 	            }
 			}
@@ -164,13 +164,27 @@ public class TaskService {
         User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        System.out.println("Usuario intentando borrar: " + currentUser.getId() + " (" + currentUser.getUsername() + ")");
+        System.out.println("Dueño del proyecto: " + task.getProject().getOwner().getId());
+        
+        if (task.getCreatedBy() != null) {
+             System.out.println("Creador de la tarea: " + task.getCreatedBy().getId());
+        } else {
+             System.out.println("Creador de la tarea: NULL");
+        }
+
         boolean isProjectOwner = task.getProject().getOwner().getId().equals(currentUser.getId());
-        boolean isTaskCreator = task.getCreatedBy().getId().equals(currentUser.getId());
+        
+        boolean isTaskCreator = false;
+        if (task.getCreatedBy() != null) {
+             isTaskCreator = task.getCreatedBy().getId().equals(currentUser.getId());
+        }
 
         if (!isProjectOwner && !isTaskCreator) {
             throw new RuntimeException("No tienes permiso para eliminar esta tarea.");
         }
-        taskRepository.deleteById(taskId);
+        
+        taskRepository.delete(task);
     }
 
 	private TaskResponse mapToResponse(Task task) {
